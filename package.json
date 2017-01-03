@@ -1,0 +1,10 @@
+{
+  "name": "ngsp",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+  	"uatdeploy":"cpx \"./**/*.{html,css,js}\" \"C:/Program Files/Common Files/microsoft shared/Web Server Extensions/15/TEMPLATE/LAYOUTS/Frameworks/EximSolutionFramework/ngsp\" -w -v",
+  	"start":"concurrently \"tsc -w\" \"npm run uatdeploy\" "
+  },
+  "author": ""
+}

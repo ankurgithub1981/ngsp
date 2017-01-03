@@ -1,0 +1,1 @@
+cpx "./**/*.{html,css,js}" "C:/Program Files/Common Files/microsoft shared/Web Server Extensions/15/TEMPLATE/LAYOUTS/Frameworks/EximSolutionFramework/ngsp"
