@@ -23,6 +23,7 @@ namespace ngsp.interfaces
 	  add(options:any):any;	
 	  update(options:any):any;	
 	  delete(options:any):any;
+      getquery():string;
 	}
 
 	export class SPRESTEntity implements iSPRESTEntity {		
@@ -104,6 +105,11 @@ namespace ngsp.interfaces
 	    add=(options:any)=>{}
 	    update=(options:any)=>{};	
 	    delete=(options:any)=>{};
+	    getquery=()=>{
+	    	return this.queryurl+this.queryparams;
+	    }
+
+	    
 	}
 
 

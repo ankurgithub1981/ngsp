@@ -50,6 +50,7 @@ var ngsp;
         entities.list = list;
         var listitems = (function (_super) {
             __extends(listitems, _super);
+            //private rungetQuery:(query:string,resultsarray:any[])=>ng.IHttpService; 
             function listitems(baseurl, http) {
                 var _this = this;
                 _super.call(this, baseurl, "/items", http);
@@ -97,6 +98,23 @@ var ngsp;
                     return _this.contextobject.get().then(function (ctx) {
                         _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
                         return _this.http.post(_this.servicepoint + "(" + options.Id + ")", null, _headers);
+                    });
+                };
+                this.getall = function (options) {
+                    var resarray = [];
+                    var query = _this.queryurl + _this.queryparams;
+                    return _this.rungetQuery(query, resarray);
+                };
+                this.rungetQuery = function (query, resultsarray) {
+                    var listcontext = _this;
+                    return listcontext.http.get(query, listcontext.queryheaders).then(function (response) {
+                        if (response.data.d.hasOwnProperty('__next')) {
+                            resultsarray = resultsarray.concat(response.data.d.results);
+                            return listcontext.rungetQuery(response.data.d.__next, resultsarray);
+                        }
+                        else {
+                            return resultsarray.concat(response.data.d.results);
+                        }
                     });
                 };
                 this.contextobject = new contextinfo(this.baseweburl, this.http);

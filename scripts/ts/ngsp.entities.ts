@@ -52,10 +52,13 @@ namespace ngsp.entities
    export class listitems extends ngsp.interfaces.SPRESTEntity 
    {   	
    	  contextobject:any;
+      //private rungetQuery:(query:string,resultsarray:any[])=>ng.IHttpService; 
+      
 	   	constructor(baseurl:string,http:ng.IHttpService) 
 	   	{
 	   		 super(baseurl,"/items",http);
 	   		 this.contextobject=new contextinfo(this.baseweburl,this.http);
+
 	   	}
 
 	   	add=(options:any)=>{
@@ -114,6 +117,29 @@ namespace ngsp.entities
               return this.http.post<any>(this.servicepoint+"("+options.Id+")",null,_headers);
            });
 	   	}
+
+      getall=(options:any)=>{
+         var resarray=[];
+         var query=this.queryurl+this.queryparams;  
+         return this.rungetQuery(query,resarray);       
+      }
+
+      rungetQuery=(query:string,resultsarray:any[])=>
+      { 
+          var listcontext=this;
+          return listcontext.http.get(query,listcontext.queryheaders).then(function(response){
+           if(response.data.d.hasOwnProperty('__next'))
+           {
+             resultsarray=resultsarray.concat(response.data.d.results);
+             return listcontext.rungetQuery(response.data.d.__next,resultsarray)  
+           }
+           else
+           {
+             return resultsarray.concat(response.data.d.results);
+           }
+         });  
+
+      }
     
    }
 

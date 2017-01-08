@@ -67,6 +67,9 @@ var ngsp;
                 this.add = function (options) { };
                 this.update = function (options) { };
                 this.delete = function (options) { };
+                this.getquery = function () {
+                    return _this.queryurl + _this.queryparams;
+                };
                 this.baseurl = baseurl;
                 this.endpoint = endpoint;
                 this.servicepoint = this.baseurl + this.endpoint;
