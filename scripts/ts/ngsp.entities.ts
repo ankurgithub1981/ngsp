@@ -16,6 +16,11 @@ namespace ngsp.entities
        return new lists(this.servicepoint,this.http);
      }
 
+     folders=()=>
+     {
+        return new folders(this.servicepoint,this.http);
+     }
+
    }
 
    export class lists extends ngsp.interfaces.SPRESTEntity
@@ -149,6 +154,76 @@ namespace ngsp.entities
        {
           super(baseurl,"/fields",http);
        }
+   }
+
+   export class folders extends ngsp.interfaces.SPRESTEntity  {
+     
+       constructor(baseurl:string,http:ng.IHttpService) 
+       {
+          super(baseurl,"/folders",http);
+       }
+
+       byrelativeurl=(serverrelativeurl:string)=>{
+         return new folder(this.baseweburl+'/_api/web',serverrelativeurl,this.http);
+       }
+
+   }
+   
+   export class folder extends ngsp.interfaces.SPRESTEntity  {
+     
+       constructor(baseurl:string,serverrelurl:string,http:ng.IHttpService) 
+       {
+          super(baseurl,"/GetFolderByServerRelativeUrl('"+serverrelurl+"')",http);
+       }
+
+       files=()=>
+       {
+         return new files(this.servicepoint,this.http);
+       }
+
+   }
+   
+   export class files extends ngsp.interfaces.SPRESTEntity {
+     
+       contextobject:any;
+
+       constructor(baseurl:string,http:ng.IHttpService) 
+       {
+          super(baseurl,"/files",http);
+          this.contextobject=new contextinfo(this.baseweburl,this.http);
+       }
+
+       byrelativeurl=(serverrelativeurl:string)=>{
+         return new file(this.baseweburl+'/_api/web',serverrelativeurl,this.http);
+       }
+
+       add=(options:any)=>
+       {
+          var filename=options.FileName;
+          var overwrite=(options.overwrite)?'true':'false';
+          var _query = this.servicepoint +"/add(overwrite="+overwrite+", url='"+filename+"')";
+          return this.contextobject.get().then(function(ctx){
+            var _headers={};
+            _headers.processData=false;
+            _headers.transformRequest=angular.identity;
+            _headers.headers={};    
+            _headers.headers["X-RequestDigest"]= ctx.data.d.GetContextWebInformation.FormDigestValue ;
+            _headers.headers["accept"]= "application/json;odata=verbose";       
+             var _url =_query;
+             var body= options.contents;
+             return this.http.post(_url,body,_headers);         
+          });     
+       }
+
+   }
+
+   export class file extends ngsp.interfaces.SPRESTEntity {
+     
+       constructor(baseurl:string,serverrelurl:string,http:ng.IHttpService) 
+       {
+          super(baseurl,"/GetFileByServerRelativeUrl('"+serverrelurl+"')",http);
+       }
+
    }
 
    export class contextinfo extends ngsp.interfaces.SPRESTEntity {

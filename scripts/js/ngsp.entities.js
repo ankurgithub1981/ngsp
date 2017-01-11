@@ -17,6 +17,9 @@ var ngsp;
                 this.lists = function () {
                     return new lists(_this.servicepoint, _this.http);
                 };
+                this.folders = function () {
+                    return new folders(_this.servicepoint, _this.http);
+                };
             }
             return web;
         }(ngsp.interfaces.SPRESTEntity));
@@ -130,6 +133,67 @@ var ngsp;
             return listfields;
         }(ngsp.interfaces.SPRESTEntity));
         entities.listfields = listfields;
+        var folders = (function (_super) {
+            __extends(folders, _super);
+            function folders(baseurl, http) {
+                var _this = this;
+                _super.call(this, baseurl, "/folders", http);
+                this.byrelativeurl = function (serverrelativeurl) {
+                    return new folder(_this.baseweburl + '/_api/web', serverrelativeurl, _this.http);
+                };
+            }
+            return folders;
+        }(ngsp.interfaces.SPRESTEntity));
+        entities.folders = folders;
+        var folder = (function (_super) {
+            __extends(folder, _super);
+            function folder(baseurl, serverrelurl, http) {
+                var _this = this;
+                _super.call(this, baseurl, "/GetFolderByServerRelativeUrl('" + serverrelurl + "')", http);
+                this.files = function () {
+                    return new files(_this.servicepoint, _this.http);
+                };
+            }
+            return folder;
+        }(ngsp.interfaces.SPRESTEntity));
+        entities.folder = folder;
+        var files = (function (_super) {
+            __extends(files, _super);
+            function files(baseurl, http) {
+                var _this = this;
+                _super.call(this, baseurl, "/files", http);
+                this.byrelativeurl = function (serverrelativeurl) {
+                    return new file(_this.baseweburl + '/_api/web', serverrelativeurl, _this.http);
+                };
+                this.add = function (options) {
+                    var filename = options.FileName;
+                    var overwrite = (options.overwrite) ? 'true' : 'false';
+                    var _query = _this.servicepoint + "/add(overwrite=" + overwrite + ", url='" + filename + "')";
+                    return _this.contextobject.get().then(function (ctx) {
+                        var _headers = {};
+                        _headers.processData = false;
+                        _headers.transformRequest = angular.identity;
+                        _headers.headers = {};
+                        _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
+                        _headers.headers["accept"] = "application/json;odata=verbose";
+                        var _url = _query;
+                        var body = options.contents;
+                        return this.http.post(_url, body, _headers);
+                    });
+                };
+                this.contextobject = new contextinfo(this.baseweburl, this.http);
+            }
+            return files;
+        }(ngsp.interfaces.SPRESTEntity));
+        entities.files = files;
+        var file = (function (_super) {
+            __extends(file, _super);
+            function file(baseurl, serverrelurl, http) {
+                _super.call(this, baseurl, "/GetFileByServerRelativeUrl('" + serverrelurl + "')", http);
+            }
+            return file;
+        }(ngsp.interfaces.SPRESTEntity));
+        entities.file = file;
         var contextinfo = (function (_super) {
             __extends(contextinfo, _super);
             function contextinfo(baseurl, http) {
