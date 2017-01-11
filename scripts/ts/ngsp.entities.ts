@@ -202,16 +202,19 @@ namespace ngsp.entities
           var filename=options.FileName;
           var overwrite=(options.overwrite)?'true':'false';
           var _query = this.servicepoint +"/add(overwrite="+overwrite+", url='"+filename+"')";
-          return this.contextobject.get().then(function(ctx){
-            var _headers={};
-            _headers.processData=false;
-            _headers.transformRequest=angular.identity;
-            _headers.headers={};    
-            _headers.headers["X-RequestDigest"]= ctx.data.d.GetContextWebInformation.FormDigestValue ;
-            _headers.headers["accept"]= "application/json;odata=verbose";       
-             var _url =_query;
-             var body= options.contents;
-             return this.http.post(_url,body,_headers);         
+          var _headers={};
+          _headers.processData=false;
+          _headers.transformRequest=angular.identity;
+          _headers.headers={};    
+          _headers.headers["accept"]= "application/json;odata=verbose";       
+          var _url =_query;
+          var body= options.contents;
+          //console.log("inside "+this.http);
+          var httpdummy=this.http;
+          return this.contextobject.get().then(function(ctx){             
+            _headers.headers["X-RequestDigest"]= ctx.data.d.GetContextWebInformation.FormDigestValue ;             
+             //console.log("outside:"+this.http);
+             return httpdummy.post(_url,body,_headers);         
           });     
        }
 
