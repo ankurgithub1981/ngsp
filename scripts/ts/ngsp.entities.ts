@@ -37,78 +37,110 @@ namespace ngsp.entities
    }
    
     export class list extends ngsp.interfaces.SPRESTEntity 
-    {
-   	
+    { 
 	   	constructor(baseurl:string,title:string,http:ng.IHttpService) 
 	   	{
 	   		 super(baseurl,"/getbytitle('"+title+"')",http);
 	   	}
     
 	    items=()=>{
-	       return new listitems(this.servicepoint,this.http); 
+	       return new listitems(this.servicepoint,this.http,this); 
 	    }
 
       fields=()=>{
         return new listfields(this.servicepoint,this.http);
       }
-
    }
 
    export class listitems extends ngsp.interfaces.SPRESTEntity 
    {   	
    	  contextobject:any;
       //private rungetQuery:(query:string,resultsarray:any[])=>ng.IHttpService; 
-      
-	   	constructor(baseurl:string,http:ng.IHttpService) 
+      private parentlistmetatdata:any
+	   	constructor(baseurl:string,http:ng.IHttpService,private parentlist:list) 
 	   	{
 	   		 super(baseurl,"/items",http);
 	   		 this.contextobject=new contextinfo(this.baseweburl,this.http);
-
+         
 	   	}
-
-	   	add=(options:any)=>{
-           var body={ '__metadata': { 'type': 'SP.Data.'+options.listname+'ListItem' }}; 
-           var item=options.item;
-           for(var key in item)
+      
+      initmetadata=()=>{
+        return this.parentlist
+         .select(['ListItemEntityTypeFullName'])
+         .get({}).then((lst)=>{
+            this.parentlistmetatdata=lst.data.d;
+            console.log('init '+this.parentlistmetatdata.ListItemEntityTypeFullName);
+            return 1;
+         }) 
+      } 
+	   	add=(options:any)=>{     
+           var p=$.Deferred();
+           if(!this.parentlistmetatdata)
            {
-             if(item.hasOwnProperty(key))
-             {
-               body[key]=item[key];
-             }
+              p=this.initmetadata();  
            }
-           let _headers:any={};
-            _headers.headers={};    
-            _headers.headers["accept"]= "application/json;odata=verbose";
-            _headers.headers["content-type"]= "application/json;odata=verbose";
-           
-           return this.contextobject.get().then((ctx)=>
+           else
            {
-              _headers.headers["X-RequestDigest"]=  ctx.data.d.GetContextWebInformation.FormDigestValue;
-              return this.http.post<any>(this.servicepoint,body,_headers);
-           });
+              //p=
+              p.resolve(1);
+           }
+           return p.then((okresponse)=>{           
+             console.log('adding '+this.parentlistmetatdata.ListItemEntityTypeFullName) ;   
+             var body={ '__metadata': { 'type': this.parentlistmetatdata.ListItemEntityTypeFullName }}; 
+             var item=options.item;
+             for(var key in item)
+             {
+               if(item.hasOwnProperty(key))
+               {
+                 body[key]=item[key];
+               }
+             }
+             let _headers:any={};
+              _headers.headers={};    
+              _headers.headers["accept"]= "application/json;odata=verbose";
+              _headers.headers["content-type"]= "application/json;odata=verbose";
+             
+             return this.contextobject.get().then((ctx)=>
+             {
+                _headers.headers["X-RequestDigest"]=  ctx.data.d.GetContextWebInformation.FormDigestValue;
+                return this.http.post<any>(this.servicepoint,body,_headers);
+             });  
+           })       
 	   	}
 
 	   	update=(options:any)=>{
-           var body={ '__metadata': { 'type': 'SP.Data.'+options.listname+'ListItem' }}; 
-           var item=options.item;
-           for(var key in item)
+          var p=$.Deferred();
+           if(!this.parentlistmetatdata)
            {
-             if(item.hasOwnProperty(key))
-             {
-               body[key]=item[key];
-             }
+              p=this.initmetadata();  
            }
-           let _headers:any={};
-           _headers.headers={};    
-           _headers.headers["IF-MATCH"]= options.etag;
-           _headers.headers["X-HTTP-Method"]="MERGE";
-           _headers.headers["accept"]= "application/json;odata=verbose";
-           _headers.headers["content-type"]= "application/json;odata=verbose";           
-           return this.contextobject.get().then((ctx)=>
+           else
            {
-              _headers.headers["X-RequestDigest"]=  ctx.data.d.GetContextWebInformation.FormDigestValue;
-              return this.http.post<any>(this.servicepoint+"("+options.Id+")",body,_headers);
-           });
+              //p=
+              p.resolve(1);
+           }
+           return p.then((okresponse)=>{
+             var body={ '__metadata': { 'type': this.parentlistmetatdata.ListItemEntityTypeFullName }}; 
+             var item=options.item;
+             for(var key in item)
+             {
+               if(item.hasOwnProperty(key))
+               {
+                 body[key]=item[key];
+               }
+             }
+             let _headers:any={};
+             _headers.headers={};    
+             _headers.headers["IF-MATCH"]= options.etag;
+             _headers.headers["X-HTTP-Method"]="MERGE";
+             _headers.headers["accept"]= "application/json;odata=verbose";
+             _headers.headers["content-type"]= "application/json;odata=verbose";           
+             return this.contextobject.get().then((ctx)=>
+             {
+                _headers.headers["X-RequestDigest"]=  ctx.data.d.GetContextWebInformation.FormDigestValue;
+                return this.http.post<any>(this.servicepoint+"("+options.Id+")",body,_headers);
+             });
+           })
 	   	}
 
  	   	delete=(options:any)=>{          
@@ -222,9 +254,36 @@ namespace ngsp.entities
 
    export class file extends ngsp.interfaces.SPRESTEntity {
      
+       contextobject:any;
+
        constructor(baseurl:string,serverrelurl:string,http:ng.IHttpService) 
        {
           super(baseurl,"/GetFileByServerRelativeUrl('"+serverrelurl+"')",http);
+          this.contextobject=new contextinfo(this.baseweburl,this.http);
+       }
+
+       delete=(options:any)=>{
+
+          //var filename=options.FileName;
+          //var overwrite=(options.overwrite)?'true':'false';
+          var _query = this.servicepoint;// +"/add(overwrite="+overwrite+", url='"+filename+"')";
+          var _headers={};
+          //_headers.processData=false;
+          _headers.transformRequest=angular.identity;
+          _headers.headers={};    
+          _headers.headers["accept"]= "application/json;odata=verbose";       
+          _headers.headers["X-HTTP-Method"]= "DELETE";       
+          _headers.headers["IF-MATCH"]= options.etag;       
+          var _url =_query;
+          //var body= options.contents;
+          //console.log("inside "+this.http);
+          var httpdummy=this.http;
+          return this.contextobject.get().then(function(ctx){             
+            _headers.headers["X-RequestDigest"]= ctx.data.d.GetContextWebInformation.FormDigestValue ;             
+             //console.log("outside:"+this.http);
+             return httpdummy.post(_url,null,_headers);         
+          });
+
        }
 
    }

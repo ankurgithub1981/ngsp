@@ -42,7 +42,7 @@ var ngsp;
                 var _this = this;
                 _super.call(this, baseurl, "/getbytitle('" + title + "')", http);
                 this.items = function () {
-                    return new listitems(_this.servicepoint, _this.http);
+                    return new listitems(_this.servicepoint, _this.http, _this);
                 };
                 this.fields = function () {
                     return new listfields(_this.servicepoint, _this.http);
@@ -53,44 +53,74 @@ var ngsp;
         entities.list = list;
         var listitems = (function (_super) {
             __extends(listitems, _super);
-            //private rungetQuery:(query:string,resultsarray:any[])=>ng.IHttpService; 
-            function listitems(baseurl, http) {
+            function listitems(baseurl, http, parentlist) {
                 var _this = this;
                 _super.call(this, baseurl, "/items", http);
+                this.parentlist = parentlist;
+                this.initmetadata = function () {
+                    return _this.parentlist
+                        .select(['ListItemEntityTypeFullName'])
+                        .get({}).then(function (lst) {
+                        _this.parentlistmetatdata = lst.data.d;
+                        console.log('init ' + _this.parentlistmetatdata.ListItemEntityTypeFullName);
+                        return 1;
+                    });
+                };
                 this.add = function (options) {
-                    var body = { '__metadata': { 'type': 'SP.Data.' + options.listname + 'ListItem' } };
-                    var item = options.item;
-                    for (var key in item) {
-                        if (item.hasOwnProperty(key)) {
-                            body[key] = item[key];
-                        }
+                    var p = $.Deferred();
+                    if (!_this.parentlistmetatdata) {
+                        p = _this.initmetadata();
                     }
-                    var _headers = {};
-                    _headers.headers = {};
-                    _headers.headers["accept"] = "application/json;odata=verbose";
-                    _headers.headers["content-type"] = "application/json;odata=verbose";
-                    return _this.contextobject.get().then(function (ctx) {
-                        _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
-                        return _this.http.post(_this.servicepoint, body, _headers);
+                    else {
+                        //p=
+                        p.resolve(1);
+                    }
+                    return p.then(function (okresponse) {
+                        console.log('adding ' + _this.parentlistmetatdata.ListItemEntityTypeFullName);
+                        var body = { '__metadata': { 'type': _this.parentlistmetatdata.ListItemEntityTypeFullName } };
+                        var item = options.item;
+                        for (var key in item) {
+                            if (item.hasOwnProperty(key)) {
+                                body[key] = item[key];
+                            }
+                        }
+                        var _headers = {};
+                        _headers.headers = {};
+                        _headers.headers["accept"] = "application/json;odata=verbose";
+                        _headers.headers["content-type"] = "application/json;odata=verbose";
+                        return _this.contextobject.get().then(function (ctx) {
+                            _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
+                            return _this.http.post(_this.servicepoint, body, _headers);
+                        });
                     });
                 };
                 this.update = function (options) {
-                    var body = { '__metadata': { 'type': 'SP.Data.' + options.listname + 'ListItem' } };
-                    var item = options.item;
-                    for (var key in item) {
-                        if (item.hasOwnProperty(key)) {
-                            body[key] = item[key];
-                        }
+                    var p = $.Deferred();
+                    if (!_this.parentlistmetatdata) {
+                        p = _this.initmetadata();
                     }
-                    var _headers = {};
-                    _headers.headers = {};
-                    _headers.headers["IF-MATCH"] = options.etag;
-                    _headers.headers["X-HTTP-Method"] = "MERGE";
-                    _headers.headers["accept"] = "application/json;odata=verbose";
-                    _headers.headers["content-type"] = "application/json;odata=verbose";
-                    return _this.contextobject.get().then(function (ctx) {
-                        _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
-                        return _this.http.post(_this.servicepoint + "(" + options.Id + ")", body, _headers);
+                    else {
+                        //p=
+                        p.resolve(1);
+                    }
+                    return p.then(function (okresponse) {
+                        var body = { '__metadata': { 'type': _this.parentlistmetatdata.ListItemEntityTypeFullName } };
+                        var item = options.item;
+                        for (var key in item) {
+                            if (item.hasOwnProperty(key)) {
+                                body[key] = item[key];
+                            }
+                        }
+                        var _headers = {};
+                        _headers.headers = {};
+                        _headers.headers["IF-MATCH"] = options.etag;
+                        _headers.headers["X-HTTP-Method"] = "MERGE";
+                        _headers.headers["accept"] = "application/json;odata=verbose";
+                        _headers.headers["content-type"] = "application/json;odata=verbose";
+                        return _this.contextobject.get().then(function (ctx) {
+                            _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
+                            return _this.http.post(_this.servicepoint + "(" + options.Id + ")", body, _headers);
+                        });
                     });
                 };
                 this.delete = function (options) {
@@ -192,7 +222,30 @@ var ngsp;
         var file = (function (_super) {
             __extends(file, _super);
             function file(baseurl, serverrelurl, http) {
+                var _this = this;
                 _super.call(this, baseurl, "/GetFileByServerRelativeUrl('" + serverrelurl + "')", http);
+                this.delete = function (options) {
+                    //var filename=options.FileName;
+                    //var overwrite=(options.overwrite)?'true':'false';
+                    var _query = _this.servicepoint; // +"/add(overwrite="+overwrite+", url='"+filename+"')";
+                    var _headers = {};
+                    //_headers.processData=false;
+                    _headers.transformRequest = angular.identity;
+                    _headers.headers = {};
+                    _headers.headers["accept"] = "application/json;odata=verbose";
+                    _headers.headers["X-HTTP-Method"] = "DELETE";
+                    _headers.headers["IF-MATCH"] = options.etag;
+                    var _url = _query;
+                    //var body= options.contents;
+                    //console.log("inside "+this.http);
+                    var httpdummy = _this.http;
+                    return _this.contextobject.get().then(function (ctx) {
+                        _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
+                        //console.log("outside:"+this.http);
+                        return httpdummy.post(_url, null, _headers);
+                    });
+                };
+                this.contextobject = new contextinfo(this.baseweburl, this.http);
             }
             return file;
         }(ngsp.interfaces.SPRESTEntity));
