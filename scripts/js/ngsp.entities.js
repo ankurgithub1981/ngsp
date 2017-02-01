@@ -1,5 +1,3 @@
-/// <reference path="../../typings/globals/angular/index.d.ts" />
-/// <reference path="../../typings/globals/jquery/index.d.ts" />
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -12,14 +10,14 @@ var ngsp;
         var web = (function (_super) {
             __extends(web, _super);
             function web(baseurl, http) {
-                var _this = this;
-                _super.call(this, baseurl, '/_api/web', http);
-                this.lists = function () {
+                var _this = _super.call(this, baseurl, '/_api/web', http) || this;
+                _this.lists = function () {
                     return new lists(_this.servicepoint, _this.http);
                 };
-                this.folders = function () {
+                _this.folders = function () {
                     return new folders(_this.servicepoint, _this.http);
                 };
+                return _this;
             }
             return web;
         }(ngsp.interfaces.SPRESTEntity));
@@ -27,11 +25,11 @@ var ngsp;
         var lists = (function (_super) {
             __extends(lists, _super);
             function lists(baseurl, http) {
-                var _this = this;
-                _super.call(this, baseurl, '/lists', http);
-                this.bytitle = function (title) {
+                var _this = _super.call(this, baseurl, '/lists', http) || this;
+                _this.bytitle = function (title) {
                     return new list(_this.servicepoint, title, _this.http);
                 };
+                return _this;
             }
             return lists;
         }(ngsp.interfaces.SPRESTEntity));
@@ -39,14 +37,14 @@ var ngsp;
         var list = (function (_super) {
             __extends(list, _super);
             function list(baseurl, title, http) {
-                var _this = this;
-                _super.call(this, baseurl, "/getbytitle('" + title + "')", http);
-                this.items = function () {
+                var _this = _super.call(this, baseurl, "/getbytitle('" + title + "')", http) || this;
+                _this.items = function () {
                     return new listitems(_this.servicepoint, _this.http, _this);
                 };
-                this.fields = function () {
+                _this.fields = function () {
                     return new listfields(_this.servicepoint, _this.http);
                 };
+                return _this;
             }
             return list;
         }(ngsp.interfaces.SPRESTEntity));
@@ -54,25 +52,22 @@ var ngsp;
         var listitems = (function (_super) {
             __extends(listitems, _super);
             function listitems(baseurl, http, parentlist) {
-                var _this = this;
-                _super.call(this, baseurl, "/items", http);
-                this.parentlist = parentlist;
-                this.initmetadata = function () {
+                var _this = _super.call(this, baseurl, "/items", http) || this;
+                _this.parentlist = parentlist;
+                _this.initmetadata = function () {
                     return _this.parentlist
                         .select(['ListItemEntityTypeFullName'])
                         .get({}).then(function (lst) {
                         _this.parentlistmetatdata = lst.data.d;
-                        console.log('init ' + _this.parentlistmetatdata.ListItemEntityTypeFullName);
                         return 1;
                     });
                 };
-                this.add = function (options) {
+                _this.add = function (options) {
                     var p = $.Deferred();
                     if (!_this.parentlistmetatdata) {
                         p = _this.initmetadata();
                     }
                     else {
-                        //p=
                         p.resolve(1);
                     }
                     return p.then(function (okresponse) {
@@ -94,51 +89,18 @@ var ngsp;
                         });
                     });
                 };
-                this.update = function (options) {
-                    var p = $.Deferred();
-                    if (!_this.parentlistmetatdata) {
-                        p = _this.initmetadata();
-                    }
-                    else {
-                        //p=
-                        p.resolve(1);
-                    }
-                    return p.then(function (okresponse) {
-                        var body = { '__metadata': { 'type': _this.parentlistmetatdata.ListItemEntityTypeFullName } };
-                        var item = options.item;
-                        for (var key in item) {
-                            if (item.hasOwnProperty(key)) {
-                                body[key] = item[key];
-                            }
-                        }
-                        var _headers = {};
-                        _headers.headers = {};
-                        _headers.headers["IF-MATCH"] = options.etag;
-                        _headers.headers["X-HTTP-Method"] = "MERGE";
-                        _headers.headers["accept"] = "application/json;odata=verbose";
-                        _headers.headers["content-type"] = "application/json;odata=verbose";
-                        return _this.contextobject.get().then(function (ctx) {
-                            _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
-                            return _this.http.post(_this.servicepoint + "(" + options.Id + ")", body, _headers);
-                        });
-                    });
+                _this.update = function (options) {
+                    return _this.byid(options.Id).update(options);
                 };
-                this.delete = function (options) {
-                    var _headers = {};
-                    _headers.headers = {};
-                    _headers.headers["IF-MATCH"] = '*';
-                    _headers.headers["X-HTTP-Method"] = "DELETE";
-                    return _this.contextobject.get().then(function (ctx) {
-                        _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
-                        return _this.http.post(_this.servicepoint + "(" + options.Id + ")", null, _headers);
-                    });
+                _this.delete = function (options) {
+                    return _this.byid(options.Id).delete({});
                 };
-                this.getall = function (options) {
+                _this.getall = function (options) {
                     var resarray = [];
                     var query = _this.queryurl + _this.queryparams;
                     return _this.rungetQuery(query, resarray);
                 };
-                this.rungetQuery = function (query, resultsarray) {
+                _this.rungetQuery = function (query, resultsarray) {
                     var listcontext = _this;
                     return listcontext.http.get(query, listcontext.queryheaders).then(function (response) {
                         if (response.data.d.hasOwnProperty('__next')) {
@@ -150,15 +112,75 @@ var ngsp;
                         }
                     });
                 };
-                this.contextobject = new contextinfo(this.baseweburl, this.http);
+                _this.byid = function (id) {
+                    return new listitem(_this.servicepoint, id, _this.http);
+                };
+                _this.contextobject = new contextinfo(_this.baseweburl, _this.http);
+                return _this;
             }
             return listitems;
         }(ngsp.interfaces.SPRESTEntity));
         entities.listitems = listitems;
+        var listitem = (function (_super) {
+            __extends(listitem, _super);
+            function listitem(baseurl, id, http) {
+                var _this = _super.call(this, baseurl, "(" + id + ")", http) || this;
+                _this.initmetadata = function () {
+                    return _this
+                        .select(['Id'])
+                        .get({}).then(function (md) {
+                        _this.entitymetadata = md.data.d;
+                        return 1;
+                    });
+                };
+                _this.update = function (options) {
+                    var p = $.Deferred();
+                    if (!_this.entitymetadata) {
+                        p = _this.initmetadata();
+                    }
+                    else {
+                        p.resolve(1);
+                    }
+                    return p.then(function (okresponse) {
+                        var body = { '__metadata': { 'type': _this.entitymetadata.__metadata.type } };
+                        var item = options.item;
+                        for (var key in item) {
+                            if (item.hasOwnProperty(key)) {
+                                body[key] = item[key];
+                            }
+                        }
+                        var _headers = {};
+                        _headers.headers = {};
+                        _headers.headers["IF-MATCH"] = _this.entitymetadata.__metadata.etag;
+                        _headers.headers["X-HTTP-Method"] = "MERGE";
+                        _headers.headers["accept"] = "application/json;odata=verbose";
+                        _headers.headers["content-type"] = "application/json;odata=verbose";
+                        return _this.contextobject.get().then(function (ctx) {
+                            _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
+                            return _this.http.post(_this.servicepoint, body, _headers);
+                        });
+                    });
+                };
+                _this.delete = function (options) {
+                    var _headers = {};
+                    _headers.headers = {};
+                    _headers.headers["IF-MATCH"] = '*';
+                    _headers.headers["X-HTTP-Method"] = "DELETE";
+                    return _this.contextobject.get().then(function (ctx) {
+                        _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
+                        return _this.http.post(_this.servicepoint, null, _headers);
+                    });
+                };
+                _this.contextobject = new contextinfo(_this.baseweburl, _this.http);
+                return _this;
+            }
+            return listitem;
+        }(ngsp.interfaces.SPRESTEntity));
+        entities.listitem = listitem;
         var listfields = (function (_super) {
             __extends(listfields, _super);
             function listfields(baseurl, http) {
-                _super.call(this, baseurl, "/fields", http);
+                return _super.call(this, baseurl, "/fields", http) || this;
             }
             return listfields;
         }(ngsp.interfaces.SPRESTEntity));
@@ -166,11 +188,11 @@ var ngsp;
         var folders = (function (_super) {
             __extends(folders, _super);
             function folders(baseurl, http) {
-                var _this = this;
-                _super.call(this, baseurl, "/folders", http);
-                this.byrelativeurl = function (serverrelativeurl) {
+                var _this = _super.call(this, baseurl, "/folders", http) || this;
+                _this.byrelativeurl = function (serverrelativeurl) {
                     return new folder(_this.baseweburl + '/_api/web', serverrelativeurl, _this.http);
                 };
+                return _this;
             }
             return folders;
         }(ngsp.interfaces.SPRESTEntity));
@@ -178,11 +200,11 @@ var ngsp;
         var folder = (function (_super) {
             __extends(folder, _super);
             function folder(baseurl, serverrelurl, http) {
-                var _this = this;
-                _super.call(this, baseurl, "/GetFolderByServerRelativeUrl('" + serverrelurl + "')", http);
-                this.files = function () {
+                var _this = _super.call(this, baseurl, "/GetFolderByServerRelativeUrl('" + serverrelurl + "')", http) || this;
+                _this.files = function () {
                     return new files(_this.servicepoint, _this.http);
                 };
+                return _this;
             }
             return folder;
         }(ngsp.interfaces.SPRESTEntity));
@@ -190,12 +212,11 @@ var ngsp;
         var files = (function (_super) {
             __extends(files, _super);
             function files(baseurl, http) {
-                var _this = this;
-                _super.call(this, baseurl, "/files", http);
-                this.byrelativeurl = function (serverrelativeurl) {
+                var _this = _super.call(this, baseurl, "/files", http) || this;
+                _this.byrelativeurl = function (serverrelativeurl) {
                     return new file(_this.baseweburl + '/_api/web', serverrelativeurl, _this.http);
                 };
-                this.add = function (options) {
+                _this.add = function (options) {
                     var filename = options.FileName;
                     var overwrite = (options.overwrite) ? 'true' : 'false';
                     var _query = _this.servicepoint + "/add(overwrite=" + overwrite + ", url='" + filename + "')";
@@ -206,15 +227,14 @@ var ngsp;
                     _headers.headers["accept"] = "application/json;odata=verbose";
                     var _url = _query;
                     var body = options.contents;
-                    //console.log("inside "+this.http);
                     var httpdummy = _this.http;
                     return _this.contextobject.get().then(function (ctx) {
                         _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
-                        //console.log("outside:"+this.http);
                         return httpdummy.post(_url, body, _headers);
                     });
                 };
-                this.contextobject = new contextinfo(this.baseweburl, this.http);
+                _this.contextobject = new contextinfo(_this.baseweburl, _this.http);
+                return _this;
             }
             return files;
         }(ngsp.interfaces.SPRESTEntity));
@@ -222,30 +242,24 @@ var ngsp;
         var file = (function (_super) {
             __extends(file, _super);
             function file(baseurl, serverrelurl, http) {
-                var _this = this;
-                _super.call(this, baseurl, "/GetFileByServerRelativeUrl('" + serverrelurl + "')", http);
-                this.delete = function (options) {
-                    //var filename=options.FileName;
-                    //var overwrite=(options.overwrite)?'true':'false';
-                    var _query = _this.servicepoint; // +"/add(overwrite="+overwrite+", url='"+filename+"')";
+                var _this = _super.call(this, baseurl, "/GetFileByServerRelativeUrl('" + serverrelurl + "')", http) || this;
+                _this.delete = function (options) {
+                    var _query = _this.servicepoint;
                     var _headers = {};
-                    //_headers.processData=false;
                     _headers.transformRequest = angular.identity;
                     _headers.headers = {};
                     _headers.headers["accept"] = "application/json;odata=verbose";
                     _headers.headers["X-HTTP-Method"] = "DELETE";
                     _headers.headers["IF-MATCH"] = options.etag;
                     var _url = _query;
-                    //var body= options.contents;
-                    //console.log("inside "+this.http);
                     var httpdummy = _this.http;
                     return _this.contextobject.get().then(function (ctx) {
                         _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
-                        //console.log("outside:"+this.http);
                         return httpdummy.post(_url, null, _headers);
                     });
                 };
-                this.contextobject = new contextinfo(this.baseweburl, this.http);
+                _this.contextobject = new contextinfo(_this.baseweburl, _this.http);
+                return _this;
             }
             return file;
         }(ngsp.interfaces.SPRESTEntity));
@@ -253,11 +267,11 @@ var ngsp;
         var contextinfo = (function (_super) {
             __extends(contextinfo, _super);
             function contextinfo(baseurl, http) {
-                var _this = this;
-                _super.call(this, baseurl, "/_api/contextinfo", http);
-                this.get = function (options) {
+                var _this = _super.call(this, baseurl, "/_api/contextinfo", http) || this;
+                _this.get = function (options) {
                     return _this.http.post(_this.servicepoint, null, _this.queryheaders);
                 };
+                return _this;
             }
             return contextinfo;
         }(ngsp.interfaces.SPRESTEntity));

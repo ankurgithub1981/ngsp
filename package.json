@@ -5,6 +5,7 @@
   "scripts": {
   	"minify":"uglifyjs scripts/js/ngsp.js scripts/js/ngsp.interfaces.js scripts/js/ngsp.entities.js scripts/js/ngsp.services.sp.js -c -m -o scripts/dist/ngsp.min.js",
   	"uatdeploy":"cpx \"./**/*.{html,css,js}\" \"C:/Program Files/Common Files/microsoft shared/Web Server Extensions/15/TEMPLATE/LAYOUTS/Frameworks/EximSolutionFramework/ngsp\" -w -v",  	
+  	"compile":"tsc",
   	"start":"concurrently \"tsc -w\" \"npm run uatdeploy\" "
   },
   "author": ""

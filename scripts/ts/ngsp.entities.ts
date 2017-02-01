@@ -69,7 +69,7 @@ namespace ngsp.entities
          .select(['ListItemEntityTypeFullName'])
          .get({}).then((lst)=>{
             this.parentlistmetatdata=lst.data.d;
-            console.log('init '+this.parentlistmetatdata.ListItemEntityTypeFullName);
+            //console.log('init '+this.parentlistmetatdata.ListItemEntityTypeFullName);
             return 1;
          }) 
       } 
@@ -109,50 +109,54 @@ namespace ngsp.entities
 	   	}
 
 	   	update=(options:any)=>{
-          var p=$.Deferred();
-           if(!this.parentlistmetatdata)
-           {
-              p=this.initmetadata();  
-           }
-           else
-           {
-              //p=
-              p.resolve(1);
-           }
-           return p.then((okresponse)=>{
-             var body={ '__metadata': { 'type': this.parentlistmetatdata.ListItemEntityTypeFullName }}; 
-             var item=options.item;
-             for(var key in item)
-             {
-               if(item.hasOwnProperty(key))
-               {
-                 body[key]=item[key];
-               }
-             }
-             let _headers:any={};
-             _headers.headers={};    
-             _headers.headers["IF-MATCH"]= options.etag;
-             _headers.headers["X-HTTP-Method"]="MERGE";
-             _headers.headers["accept"]= "application/json;odata=verbose";
-             _headers.headers["content-type"]= "application/json;odata=verbose";           
-             return this.contextobject.get().then((ctx)=>
-             {
-                _headers.headers["X-RequestDigest"]=  ctx.data.d.GetContextWebInformation.FormDigestValue;
-                return this.http.post<any>(this.servicepoint+"("+options.Id+")",body,_headers);
-             });
-           })
+          // var p=$.Deferred();
+          //  if(!this.parentlistmetatdata)
+          //  {
+          //     p=this.initmetadata();  
+          //  }
+          //  else
+          //  {
+          //     //p=
+          //     p.resolve(1);
+          //  }
+          //  return p.then((okresponse)=>{
+          //    var body={ '__metadata': { 'type': this.parentlistmetatdata.ListItemEntityTypeFullName }}; 
+          //    var item=options.item;
+          //    for(var key in item)
+          //    {
+          //      if(item.hasOwnProperty(key))
+          //      {
+          //        body[key]=item[key];
+          //      }
+          //    }
+          //    let _headers:any={};
+          //    _headers.headers={};    
+          //    _headers.headers["IF-MATCH"]= options.etag;
+          //    _headers.headers["X-HTTP-Method"]="MERGE";
+          //    _headers.headers["accept"]= "application/json;odata=verbose";
+          //    _headers.headers["content-type"]= "application/json;odata=verbose";           
+          //    return this.contextobject.get().then((ctx)=>
+          //    {
+          //       _headers.headers["X-RequestDigest"]=  ctx.data.d.GetContextWebInformation.FormDigestValue;
+          //       return this.http.post<any>(this.servicepoint+"("+options.Id+")",body,_headers);
+          //    });
+          //  })
+          return this.byid(options.Id).update(options);
 	   	}
 
  	   	delete=(options:any)=>{          
-           let _headers:any={};
-           _headers.headers={};    
-           _headers.headers["IF-MATCH"]= '*';
-           _headers.headers["X-HTTP-Method"]="DELETE";
-           return this.contextobject.get().then((ctx)=>
-           {
-              _headers.headers["X-RequestDigest"]=  ctx.data.d.GetContextWebInformation.FormDigestValue;
-              return this.http.post<any>(this.servicepoint+"("+options.Id+")",null,_headers);
-           });
+           // let _headers:any={};
+           // _headers.headers={};    
+           // _headers.headers["IF-MATCH"]= '*';
+           // _headers.headers["X-HTTP-Method"]="DELETE";
+           // return this.contextobject.get().then((ctx)=>
+           // {
+           //    _headers.headers["X-RequestDigest"]=  ctx.data.d.GetContextWebInformation.FormDigestValue;
+           //    return this.http.post<any>(this.servicepoint+"("+options.Id+")",null,_headers);
+           // });
+           //console.log('items delete');
+          return this.byid(options.Id).delete({});
+
 	   	}
 
       getall=(options:any)=>{
@@ -177,9 +181,83 @@ namespace ngsp.entities
          });  
 
       }
+
+      byid=(id:string)=>{
+        return new listitem(this.servicepoint,id,this.http);      
+      }
     
    }
 
+    export class listitem extends ngsp.interfaces.SPRESTEntity 
+    { 
+      
+       contextobject:any;
+       private entitymetadata:any;
+
+       constructor(baseurl:string,id:string,http:ng.IHttpService) 
+       {
+          super(baseurl,"("+id+")",http);
+          this.contextobject=new contextinfo(this.baseweburl,this.http);
+       }
+
+       initmetadata=()=>{
+        
+        return this
+         .select(['Id'])
+         .get({}).then((md)=>{
+            this.entitymetadata=md.data.d;
+            return 1;
+         }) 
+      }
+
+       update=(options:any)=>{
+          var p=$.Deferred();
+           if(!this.entitymetadata)
+           {
+              p=this.initmetadata();  
+           }
+           else
+           {
+              //p=
+              p.resolve(1);
+           }
+           return p.then((okresponse)=>{
+             var body={ '__metadata': { 'type': this.entitymetadata.__metadata.type }}; 
+             var item=options.item;
+             for(var key in item)
+             {
+               if(item.hasOwnProperty(key))
+               {
+                 body[key]=item[key];
+               }
+             }
+             let _headers:any={};
+             _headers.headers={};    
+             _headers.headers["IF-MATCH"]= this.entitymetadata.__metadata.etag;
+             _headers.headers["X-HTTP-Method"]="MERGE";
+             _headers.headers["accept"]= "application/json;odata=verbose";
+             _headers.headers["content-type"]= "application/json;odata=verbose";           
+             return this.contextobject.get().then((ctx)=>
+             {
+                _headers.headers["X-RequestDigest"]=  ctx.data.d.GetContextWebInformation.FormDigestValue;
+                return this.http.post<any>(this.servicepoint,body,_headers);
+             });
+           })
+       }
+
+        delete=(options:any)=>{          
+           let _headers:any={};
+           _headers.headers={};    
+           _headers.headers["IF-MATCH"]= '*';
+           _headers.headers["X-HTTP-Method"]="DELETE";
+           return this.contextobject.get().then((ctx)=>
+           {
+              _headers.headers["X-RequestDigest"]=  ctx.data.d.GetContextWebInformation.FormDigestValue;
+              return this.http.post<any>(this.servicepoint,null,_headers);
+           });
+       }
+    }
+    
     export class listfields extends ngsp.interfaces.SPRESTEntity 
     {
        constructor(baseurl:string,http:ng.IHttpService) 
