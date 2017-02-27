@@ -21,6 +21,19 @@ namespace ngsp.entities
         return new folders(this.servicepoint,this.http);
      }
 
+     currentuser=()=>
+     {
+       return new currentuser(this.servicepoint,this.http);
+     }
+
+   }
+
+   export class currentuser extends ngsp.interfaces.SPRESTEntity
+   {
+     constructor(baseurl:string,http:ng.IHttpService)
+     {
+       super(baseurl,'/currentuser',http);
+     }
    }
 
    export class lists extends ngsp.interfaces.SPRESTEntity

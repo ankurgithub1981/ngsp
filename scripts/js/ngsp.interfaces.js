@@ -1,3 +1,5 @@
+/// <reference path="../../typings/globals/angular/index.d.ts" />
+/// <reference path="../../typings/globals/jquery/index.d.ts" />
 var ngsp;
 (function (ngsp) {
     var interfaces;
@@ -80,6 +82,7 @@ var ngsp;
         interfaces.SPRESTEntity = SPRESTEntity;
     })(interfaces = ngsp.interfaces || (ngsp.interfaces = {}));
 })(ngsp || (ngsp = {}));
+var ngsp;
 (function (ngsp) {
     var utilities;
     (function (utilities) {
