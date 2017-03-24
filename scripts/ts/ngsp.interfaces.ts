@@ -28,7 +28,7 @@ namespace ngsp.interfaces
 
 	export class SPRESTEntity implements iSPRESTEntity {		
 	    baseweburl:string;	
-		baseurl:string;
+		   baseurl:string;
 	    servicepoint:string;
 	    endpoint:string;
 	    queryurl:string;

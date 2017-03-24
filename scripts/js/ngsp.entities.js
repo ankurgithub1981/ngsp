@@ -23,6 +23,9 @@ var ngsp;
                 this.currentuser = function () {
                     return new currentuser(_this.servicepoint, _this.http);
                 };
+                this.contextinfo = function () {
+                    return new contextinfo(_this.servicepoint, _this.http);
+                };
             }
             return web;
         }(ngsp.interfaces.SPRESTEntity));
@@ -230,11 +233,42 @@ var ngsp;
                         return _this.http.post(_this.servicepoint, null, _headers);
                     });
                 };
+                this.attachments = function () {
+                    return new attachmentfiles(_this.servicepoint, _this.http);
+                };
                 this.contextobject = new contextinfo(this.baseweburl, this.http);
             }
             return listitem;
         }(ngsp.interfaces.SPRESTEntity));
         entities.listitem = listitem;
+        var attachmentfiles = (function (_super) {
+            __extends(attachmentfiles, _super);
+            function attachmentfiles(baseurl, http) {
+                var _this = this;
+                _super.call(this, baseurl, "/attachmentfiles", http);
+                this.add = function (options) {
+                    var filename = options.FileName;
+                    var _query = _this.servicepoint + "/add(FileName='" + filename + "')";
+                    var _headers = {};
+                    _headers.processData = false;
+                    _headers.transformRequest = angular.identity;
+                    _headers.headers = {};
+                    _headers.headers["accept"] = "application/json;odata=verbose";
+                    var _url = _query;
+                    var body = options.contents;
+                    //console.log("inside "+this.http);
+                    var httpdummy = _this.http;
+                    return _this.contextobject.get().then(function (ctx) {
+                        _headers.headers["X-RequestDigest"] = ctx.data.d.GetContextWebInformation.FormDigestValue;
+                        //console.log("outside:"+this.http);
+                        return httpdummy.post(_url, body, _headers);
+                    });
+                };
+                this.contextobject = new contextinfo(this.baseweburl, this.http);
+            }
+            return attachmentfiles;
+        }(ngsp.interfaces.SPRESTEntity));
+        entities.attachmentfiles = attachmentfiles;
         var listfields = (function (_super) {
             __extends(listfields, _super);
             function listfields(baseurl, http) {

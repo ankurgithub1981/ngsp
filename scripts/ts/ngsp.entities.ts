@@ -26,6 +26,11 @@ namespace ngsp.entities
        return new currentuser(this.servicepoint,this.http);
      }
 
+     contextinfo=()=>
+     {
+       return new contextinfo(this.servicepoint,this.http);
+     }
+
    }
 
    export class currentuser extends ngsp.interfaces.SPRESTEntity
@@ -269,15 +274,51 @@ namespace ngsp.entities
               return this.http.post<any>(this.servicepoint,null,_headers);
            });
        }
+
+       attachments=()=>
+       {
+          return new attachmentfiles(this.servicepoint,this.http);
+       }
     }
     
+    export class attachmentfiles extends ngsp.interfaces.SPRESTEntity {
+      
+       contextobject:any;
+
+       constructor(baseurl:string,http:ng.IHttpService) 
+       {
+          super(baseurl,"/attachmentfiles",http);
+          this.contextobject=new contextinfo(this.baseweburl,this.http);
+       } 
+
+       add=(options:any)=>
+       {
+          var filename=options.FileName;
+          var _query = this.servicepoint +"/add(FileName='"+filename+"')";
+          var _headers={};
+          _headers.processData=false;
+          _headers.transformRequest=angular.identity;
+          _headers.headers={};    
+          _headers.headers["accept"]= "application/json;odata=verbose";       
+          var _url =_query;
+          var body= options.contents;
+          //console.log("inside "+this.http);
+          var httpdummy=this.http;
+          return this.contextobject.get().then(function(ctx){             
+            _headers.headers["X-RequestDigest"]= ctx.data.d.GetContextWebInformation.FormDigestValue ;             
+             //console.log("outside:"+this.http);
+             return httpdummy.post(_url,body,_headers);         
+          });     
+       }
+     
+    }
     export class listfields extends ngsp.interfaces.SPRESTEntity 
     {
        constructor(baseurl:string,http:ng.IHttpService) 
        {
           super(baseurl,"/fields",http);
        }
-   }
+    }
 
    export class folders extends ngsp.interfaces.SPRESTEntity  {
      
